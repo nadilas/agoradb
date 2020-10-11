@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package testdb;
+
+option go_package = "protobufs";
+
+message SaveUserRequest {
+    string value = 1;
+}
+
+message SaveUserResponse {
+    string Value = 1;
+    int32 counter = 2;
+}
+
+service User {
+    rpc Save(SaveUserRequest) returns (SaveUserResponse) {}
+    rpc SaveClientStream(stream SaveUserRequest) returns (SaveUserResponse) {}
+    rpc SaveServerStream(SaveUserRequest) returns (stream SaveUserResponse) {}
+    rpc SaveBiStream(stream SaveUserRequest) returns (stream SaveUserResponse) {}
+}

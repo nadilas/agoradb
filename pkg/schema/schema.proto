@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package io.agoradb;
+
+option go_package = "schema";
+
+message Database {
+    string name = 1;
+}
+
+message CreateDatabaseResponse {
+    bool success = 1;
+    string errorMessage = 2;
+}
+
+message DescribeDatabaseResponse {
+
+}
+
+service Schema {
+    rpc CreateDatabase (Database) returns (CreateDatabaseResponse) {}
+    rpc DescribeDatabase(Database) returns (DescribeDatabaseResponse) {}
+}

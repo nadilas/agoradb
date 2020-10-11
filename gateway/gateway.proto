@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package io.agoradb;
+
+option go_package = "gateway";
+
+message PingRequest {
+    string value = 1;
+}
+
+message PingResponse {
+    string Value = 1;
+}
+
+message InfoRequest {}
+
+message InfoResponse {
+    repeated DatabaseService databases = 1;
+}
+
+message DatabaseService {
+    string name = 1;
+    repeated ServiceInfo services = 2;
+}
+
+message ServiceInfo {
+    string name = 1;
+    string metadata = 2;
+    repeated MethodInfo methods = 3;
+}
+
+message MethodInfo {
+    string name = 1;
+    bool isClientStream = 2;
+    bool isServerStream = 3;
+}
+
+service Gateway {
+    rpc Ping(PingRequest) returns (PingResponse) {}
+    rpc Info(InfoRequest) returns (InfoResponse) {}
+}
