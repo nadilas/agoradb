@@ -13,7 +13,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-func UnaryMethodHandler(d *desc.MethodDescriptor) func (srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func UnaryMethodHandler(d *desc.MethodDescriptor) func(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	fullyQualifiedName := fmt.Sprintf("/%s/%s", d.GetService().GetFullyQualifiedName(), d.GetName())
 	return func(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 		in := new(protobufs.SaveUserRequest)
@@ -21,14 +21,14 @@ func UnaryMethodHandler(d *desc.MethodDescriptor) func (srv interface{}, ctx con
 			return nil, err
 		}
 		if interceptor == nil {
-			return srv.(protobufs.UserServer).Save(ctx, in)
+			return srv.(DatabaseHandler).Save(ctx, in)
 		}
 		info := &grpc.UnaryServerInfo{
 			Server:     srv,
 			FullMethod: fullyQualifiedName,
 		}
 		handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.(protobufs.UserServer).Save(ctx, req.(*protobufs.SaveUserRequest))
+			return srv.(DatabaseHandler).Save(ctx, req.(*protobufs.SaveUserRequest))
 		}
 		return interceptor(ctx, in, info, handler)
 	}

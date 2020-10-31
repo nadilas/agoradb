@@ -4,12 +4,12 @@
 package node
 
 import (
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/featme-inc/agoradb/gateway"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -30,7 +30,7 @@ to quickly create a Cobra application.`,
 		gw := gateway.New(gateway.DefaultConfig)
 		go func() {
 			if err := gw.Serve(); err != nil {
-				log.Fatal(err)
+				logrus.Fatal(err)
 			}
 		}()
 

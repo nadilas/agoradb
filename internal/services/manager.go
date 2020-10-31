@@ -8,12 +8,13 @@ import (
 	"context"
 	"time"
 
+	"github.com/featme-inc/agoradb/internal/schema"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 )
 
 type ReadDatabaseRepository interface {
-	AllDatabases() []Database
+	AllDatabases() []schema.Database
 }
 
 type Manager struct {
@@ -40,7 +41,7 @@ func (m *Manager) Stop() error {
 	serviceMap := m.registry.serviceMap
 	allDatabaseCount := len(serviceMap)
 
-	ctx, _ := context.WithTimeout(context.Background(), 30 * time.Second)
+	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
 	m.registry.Lock()
 	defer m.registry.Unlock()
 	for _, databaseService := range serviceMap {
@@ -94,7 +95,7 @@ func (m Manager) AllDatabases() []databaseInfo {
 	return list
 }
 
-func (m *Manager) StartDatabase(database Database) {
+func (m *Manager) StartDatabase(database schema.Database) {
 	defer func() {
 		if err := recover(); err != nil {
 			logrus.Errorf("Paniced on database databaseService: %s. Restarting. Error: %v", database.Name, err)

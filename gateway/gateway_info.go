@@ -21,7 +21,7 @@ func (g *gatewayServer) Info(ctx context.Context, request *InfoRequest) (*InfoRe
 					IsServerStream: mi.IsServerStream,
 				})
 			}
-			svcs = append(svcs, &ServiceInfo{Name: svc, Metadata: info.Metadata.(string), Methods: methods})
+			svcs = append(svcs, &ServiceInfo{Name: svc, Metadata: "", Methods: methods})
 		}
 		dbs = append(dbs, &DatabaseService{
 			Name:     ds.Name,

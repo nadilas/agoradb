@@ -7,11 +7,11 @@ package schema
 import (
 	"context"
 
-	"github.com/featme-inc/agoradb/internal/services"
+	"github.com/featme-inc/agoradb/internal/schema/schemapb"
 	"github.com/jhump/protoreflect/desc/builder"
 )
 
-func (s *Server) CreateDatabase(ctx context.Context, request *Database) (*CreateDatabaseResponse, error) {
+func (s *Server) CreateDatabase(ctx context.Context, request *schemapb.Database) (*schemapb.CreateDatabaseResponse, error) {
 	//mdEmpty, _ := desc.LoadMessageDescriptorForMessage((*empty.Empty)(nil))
 	//mdAny,_ := desc.LoadMessageDescriptorForMessage((*any.Any)(nil))
 	//mbAny, _ := builder.FromMessage(mdAny)
@@ -31,13 +31,13 @@ func (s *Server) CreateDatabase(ctx context.Context, request *Database) (*Create
 		Build()
 
 	if err := s.repository.CreateDatabase(database, fd); err != nil {
-		return &CreateDatabaseResponse{ErrorMessage: err.Error()}, nil
+		return &schemapb.CreateDatabaseResponse{ErrorMessage: err.Error()}, nil
 	}
 
-	go s.manager.StartDatabase(services.Database{
+	go s.manager.StartDatabase(Database{
 		Name:       database,
 		Descriptor: fd,
 	})
 
-	return &CreateDatabaseResponse{Success: true}, nil
+	return &schemapb.CreateDatabaseResponse{Success: true}, nil
 }

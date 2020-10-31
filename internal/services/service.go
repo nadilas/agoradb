@@ -7,35 +7,67 @@ package services
 import (
 	"bytes"
 	"compress/gzip"
-	"context"
 	"fmt"
 	"net"
 	"os"
 
-	"github.com/featme-inc/agoradb/examples/basic/dsl/protobufs"
 	"github.com/featme-inc/agoradb/internal/handler"
+	"github.com/featme-inc/agoradb/internal/schema"
 	"github.com/golang/protobuf/proto"
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_logrus "github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
+	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
+	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	"github.com/jhump/protoreflect/desc"
 	"github.com/kr/pretty"
+	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 )
 
 type databaseService struct {
-	database   Database
+	database   schema.Database
 	listener   net.Listener
 	grpcServer *grpc.Server
 	logger     *logrus.Entry
 }
 
-func newDatabaseService(database Database) *databaseService {
+func newDatabaseService(database schema.Database) *databaseService {
+	logger := logrus.WithField("service", database.Name)
 	svc := &databaseService{
-		database: database,
-		grpcServer: grpc.NewServer(),
-		logger: logrus.WithField("service", database.Name),
+		database:   database,
+		grpcServer: createGrpcServer(logger),
+		logger:     logger,
 	}
 	svc.registerServices()
 	return svc
+}
+
+func createGrpcServer(logger *logrus.Entry) *grpc.Server {
+	// TODO decide we want to log grpc internal calls as well?
+	// grpc_logrus.ReplaceGrpcLogger(logger)
+	trcr := opentracing.GlobalTracer()
+	return grpc.NewServer(
+		grpc_middleware.WithUnaryServerChain(
+			grpc_prometheus.UnaryServerInterceptor,
+			grpc_recovery.UnaryServerInterceptor(),
+			otgrpc.OpenTracingServerInterceptor(trcr),
+			grpc_ctxtags.UnaryServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
+			grpc_logrus.UnaryServerInterceptor(logger),
+			// TODO decide if we want to log payload as well
+			// grpc_logrus.PayloadUnaryServerInterceptor(logger, grpc_logrus.WithDecider(func (methodFullName string, err error) bool {}),
+		),
+		grpc_middleware.WithStreamServerChain(
+			grpc_prometheus.StreamServerInterceptor,
+			grpc_recovery.StreamServerInterceptor(),
+			grpc_ctxtags.StreamServerInterceptor(grpc_ctxtags.WithFieldExtractor(grpc_ctxtags.CodeGenRequestFieldExtractor)),
+			grpc_logrus.StreamServerInterceptor(logger),
+			// TODO decide if we want to log payload as well
+			// grpc_logrus.PayloadStreamServerInterceptor(logger, func(ctx context.Context, fullMethodName string, servingObject interface{}) bool {}),
+		),
+	)
 }
 
 func (s *databaseService) Name() string {
@@ -103,11 +135,11 @@ func (s *databaseService) registerServices() {
 		buf := getServiceMetadata(svcD, fileName)
 		s.grpcServer.RegisterService(&grpc.ServiceDesc{
 			ServiceName: svcName,
-			HandlerType: (*interface{})(nil),
+			HandlerType: (*handler.DatabaseHandler)(nil),
 			Methods:     methods,
 			Streams:     streams,
 			Metadata:    buf.Bytes(),
-		}, &userImpl{})
+		}, handler.New(s.database))
 		s.logger.Infof("Registered %s service on database: %s via: %s", svcName, s.Name(), fileName)
 	}
 }
@@ -120,10 +152,4 @@ func getServiceMetadata(svcD *desc.ServiceDescriptor, fileName string) bytes.Buf
 	w.Write(bts)
 	w.Close()
 	return buf
-}
-
-type userImpl struct{}
-
-func (u *userImpl) Save(ctx context.Context, request *protobufs.SaveUserRequest) (*protobufs.SaveUserResponse, error) {
-	return &protobufs.SaveUserResponse{Value: "user service responding!"}, nil
 }

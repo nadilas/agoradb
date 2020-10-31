@@ -4,8 +4,11 @@
 
 package schema
 
-import "context"
+import (
+	"github.com/jhump/protoreflect/desc"
+)
 
-func (s *Server) DescribeDatabase(ctx context.Context, database *Database) (*DescribeDatabaseResponse, error) {
-	panic("implement me")
+type Database struct {
+	Name       string
+	Descriptor *desc.FileDescriptor
 }

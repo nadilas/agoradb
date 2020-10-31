@@ -13,7 +13,7 @@ import (
 	"github.com/buraksezer/olric"
 	"github.com/buraksezer/olric/config"
 	"github.com/buraksezer/olric/query"
-	"github.com/featme-inc/agoradb/internal/services"
+	"github.com/featme-inc/agoradb/internal/schema"
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/desc/protoparse"
 	"github.com/jhump/protoreflect/desc/protoprint"
@@ -70,7 +70,7 @@ func (r *Repository) Stop() error {
 	return r.db.Shutdown(ctx)
 }
 
-func (r *Repository) AllDatabases() (databases []services.Database) {
+func (r *Repository) AllDatabases() (databases []schema.Database) {
 	cursor, err := r.databases.Query(query.M{"$onKey": query.M{"$regexMatch": ""}})
 	if err != nil {
 		log.Fatalf("databases map is not available: %v", err)
@@ -86,7 +86,7 @@ func (r *Repository) AllDatabases() (databases []services.Database) {
 			logrus.Errorf("Failed to decode proto to file descriptor: %v", err)
 			return true
 		}
-		databases = append(databases, services.Database{Name: databaseKey, Descriptor: files[0]})
+		databases = append(databases, schema.Database{Name: databaseKey, Descriptor: files[0]})
 		return true
 	})
 

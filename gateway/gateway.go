@@ -14,9 +14,10 @@ import (
 	"time"
 
 	"github.com/featme-inc/agoradb/gateway/proxy"
+	"github.com/featme-inc/agoradb/internal/persistence/memory"
+	"github.com/featme-inc/agoradb/internal/schema"
+	"github.com/featme-inc/agoradb/internal/schema/schemapb"
 	"github.com/featme-inc/agoradb/internal/services"
-	"github.com/featme-inc/agoradb/schema"
-	"github.com/featme-inc/agoradb/storage/memory"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/openzipkin/zipkin-go/reporter"
 	"github.com/prometheus/client_golang/prometheus"
@@ -95,7 +96,7 @@ var (
 			grpc_prometheus.StreamServerInterceptor,
 			grpc_recovery.StreamServerInterceptor(),
 		},
-		Repository: memory.New(),
+		Repository:        memory.New(),
 		ReflectionEnabled: true,
 	}
 )
@@ -148,7 +149,7 @@ func (g *gatewayServer) serveGrpc() error {
 		log.Fatal(err)
 	}
 
-	logrus.Infof("Serving agoraDD gateway on %s", g.config.ServerConfig.Address())
+	logrus.Infof("Serving agoraDB gateway on %s", g.config.ServerConfig.Address())
 	return g.createGrpcServer().Serve(g.listener)
 }
 
@@ -198,7 +199,7 @@ func (g *gatewayServer) registerMainServices() {
 	if g.config.ReflectionEnabled {
 		registerReflection(g)
 	}
-	schema.RegisterSchemaServer(g.grpcServer, schema.NewServer(g.repository, g.serviceManager))
+	schemapb.RegisterSchemaServer(g.grpcServer, schema.NewServer(g.repository, g.serviceManager))
 	RegisterGatewayServer(g.grpcServer, g)
 }
 

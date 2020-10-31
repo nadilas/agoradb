@@ -20,8 +20,8 @@ type registry struct {
 
 func newRegistry() *registry {
 	return &registry{
-		mux:          sync.RWMutex{},
-		serviceMap:   make(map[int]*databaseService),
+		mux:        sync.RWMutex{},
+		serviceMap: make(map[int]*databaseService),
 	}
 }
 
@@ -41,7 +41,7 @@ func (r *registry) removeService(serviceName string) {
 	oldSize := len(r.services)
 	r.services = append(r.services[0:idx], r.services[idx+1:]...)
 	// shift map
-	for i := idx+1; i < oldSize; i++ {
+	for i := idx + 1; i < oldSize; i++ {
 		r.serviceMap[i-1] = r.serviceMap[i]
 	}
 	delete(r.serviceMap, oldSize-1)

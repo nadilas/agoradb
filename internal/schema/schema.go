@@ -8,7 +8,6 @@
 package schema
 
 import (
-	"github.com/featme-inc/agoradb/internal/services"
 	"github.com/jhump/protoreflect/desc"
 )
 
@@ -22,7 +21,7 @@ type WriteDatabaseRepository interface {
 }
 
 type DatabaseManager interface {
-	StartDatabase(database services.Database)
+	StartDatabase(database Database)
 }
 
 func NewServer(repository WriteDatabaseRepository, manager DatabaseManager) *Server {

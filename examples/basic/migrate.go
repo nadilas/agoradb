@@ -9,7 +9,7 @@ import (
 
 	"github.com/featme-inc/agoradb"
 	"github.com/featme-inc/agoradb/examples/basic/migrations"
-	"github.com/featme-inc/agoradb/schema/migration"
+	"github.com/featme-inc/agoradb/internal/schema/migration"
 )
 
 func migrate(client *agoradb.Client) {
